@@ -1,0 +1,79 @@
+apply plugin: "com.android.application"
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react"
+apply plugin: "com.google.gms.google-services"   // ⭐ MUST be here
+
+react {
+    autolinkLibrariesWithApp()
+}
+
+def enableProguardInReleaseBuilds = false
+def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
+
+android {
+    ndkVersion rootProject.ext.ndkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdk rootProject.ext.compileSdkVersion
+
+    namespace "com.campusconnectmobile"
+
+    defaultConfig {
+        applicationId "com.campusconnectmobile"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+    }
+
+    // ⭐ ADD RELEASE SIGNING CONFIG HERE
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+        release {
+            storeFile file(MYAPP_UPLOAD_STORE_FILE)
+            storePassword MYAPP_UPLOAD_STORE_PASSWORD
+            keyAlias MYAPP_UPLOAD_KEY_ALIAS
+            keyPassword MYAPP_UPLOAD_KEY_PASSWORD
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            // ⭐ USE RELEASE SIGNING
+            signingConfig signingConfigs.release
+
+            shrinkResources false
+            minifyEnabled enableProguardInReleaseBuilds
+
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+    }
+}
+
+dependencies {
+    implementation("com.facebook.react:react-android")
+
+    if (hermesEnabled.toBoolean()) {
+        implementation("com.facebook.react:hermes-android")
+    } else {
+        implementation jscFlavor
+    }
+
+    // ⭐ USE THIS EXACT BOM VERSION (MOST STABLE FOR RN-Firebase)
+    implementation platform("com.google.firebase:firebase-bom:32.7.4")
+
+    // ⭐ Firebase modules (NO VERSION NUMBERS)
+    implementation "com.google.firebase:firebase-auth"
+    implementation "com.google.firebase:firebase-firestore"
+    implementation "com.google.firebase:firebase-storage"
+
+    // ⭐ REQUIRED for Drawer + Vector Icons
+    implementation "androidx.appcompat:appcompat:1.6.1"
+}
